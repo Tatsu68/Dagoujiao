@@ -1,2 +1,2 @@
 # Dagoujiao
- Make Bms Louder Like Big Dog
+ Make BMS louder like big dogs barking!
