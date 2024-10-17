@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <JuceHeader.h>
 #include "MaxxCore.h"
@@ -88,6 +88,7 @@ private:
     juce::TextButton mBtnAnalyze{ "Analyze" };
     juce::TextButton mBtnSelectTracks{ "Select Tracks" };
     juce::TextButton mBtnProcess{ "Process" };
+    juce::TextButton mBtnProcessShot{ "Process Shot" };
     juce::TextEditor mAnalysisIndicator;
     
     juce::ToggleButton mTglSoften {"Soften"};

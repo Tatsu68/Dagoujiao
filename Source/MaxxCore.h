@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include<vector>
 #include<JuceHeader.h>
@@ -31,17 +31,21 @@ private:
     bool mIsSoften = false;
     int mSoftenKernelSize = 16;
     float mSoftenSigma = 4.f;
+    // avg analyze
+    std::vector<float> mAvgDatas[2];
+    float mAvgWt[2];
     // juce parts
 public:
     int setSoften(bool, int, float);
     int analyze(juce::File, juce::File);
     StatusInfo getStatus();
     int processTracks(juce::Array<juce::File>, juce::File);
+    int processShots(juce::Array<juce::File>, juce::File);
 private:
     juce::AudioFormatManager mFormatManager;
     juce::AudioBuffer<float> cool;
 
     int analyzeCore(float** pre, float** post, int n);
-    int processTrackCore(juce::File, juce::File);
+    int processTrackCore(juce::File, juce::File, bool);
 
 };

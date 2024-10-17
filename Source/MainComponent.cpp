@@ -1,4 +1,4 @@
-﻿#include "MainComponent.h"
+#include "MainComponent.h"
 
 //==============================================================================
 MainComponent::MainComponent()
@@ -28,6 +28,10 @@ MainComponent::MainComponent()
     mBtnProcess.setBounds(140, 70, 100, 30);
     mBtnProcess.addListener(this);
     addAndMakeVisible(mBtnProcess);
+
+    mBtnProcessShot.setBounds(260, 70, 100, 30);
+    mBtnProcessShot.addListener(this);
+    addAndMakeVisible(mBtnProcessShot);
 
     mTglSoften.setBounds(20, 120, 100, 30);
     mTglSoften.addListener(this);
@@ -110,6 +114,10 @@ void MainComponent::buttonClicked(juce::Button *btn) {
     if (btn == &mBtnProcess) {
         mChooserSave.browseForDirectory();
         mProcStat = mMaxx->processTracks(mChooserTrack.getResults(), mChooserSave.getResult());
+    }
+    if (btn == &mBtnProcessShot) {
+        mChooserSave.browseForDirectory();
+        mProcStat = mMaxx->processShots(mChooserTrack.getResults(), mChooserSave.getResult());
     }
     if (btn == &mTglSoften) {
 

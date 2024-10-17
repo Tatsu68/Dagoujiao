@@ -1,4 +1,4 @@
-﻿#include "MaxxCore.h"
+#include "MaxxCore.h"
 
 MaxxCore::MaxxCore(int size) {
 	mFftSize = size;
@@ -10,6 +10,9 @@ MaxxCore::MaxxCore(int size) {
 	mCfgFft = kiss_fftr_alloc(mFftSize, 0, NULL, NULL);
 	mCfgIfft = kiss_fftr_alloc(mFftSize, 1, NULL, NULL);
 
+	for (int i = 0; i < 2; i++) {
+		mAvgDatas[i].resize(mFreqDomainSize);
+	}
 }
 
 MaxxCore::~MaxxCore()
@@ -66,6 +69,10 @@ int MaxxCore::analyze(juce::File pre, juce::File post) {
 
 	bool failed = false;
 
+	for (int i = 0; i < 2; i++) {
+		memset(mAvgDatas[i].data(), 0, sizeof(float) * mFreqDomainSize);
+		mAvgWt[i] = 0.0f;
+	}
 	for (int64_t i = 0; i < mNumSamples; i+=mFftDelta) {
 		bool isFinal = i + mFftDelta >= mNumSamples;
 		auto cnt = isFinal ? mNumSamples - i : mFftSize;
@@ -80,8 +87,18 @@ int MaxxCore::analyze(juce::File pre, juce::File post) {
 
 
 		for (int j = 0; j < 2; j++) {
+
 			fwHann(bufPre.getWritePointer(j), mFftSize, i>0,true);
 			fwHann(bufPost.getWritePointer(j), mFftSize, i>0,true);
+			// get Rms
+			float rmsPre = 0.;
+			for (int k = 0; k < mFftSize; k++) {
+				float sampPre = bufPre.getReadPointer(j)[k];
+				rmsPre += sampPre * sampPre;
+			}
+			rmsPre /= mFftSize;
+			rmsPre = sqrtf(rmsPre);
+			mAvgWt[j] += rmsPre;
 			kiss_fftr(mCfgFft, bufPre.getReadPointer(j), arrFreqPre);
 			kiss_fftr(mCfgFft, bufPost.getReadPointer(j), arrFreqPost);
 			for (int k = 0; k < mFreqDomainSize; k++) {
@@ -95,16 +112,28 @@ int MaxxCore::analyze(juce::File pre, juce::File post) {
 				if (mIsSoften) {
 					mSoftenTmp[k] = log2f(anRatio);
 				}
-				else mAnalysisDatas[j].push_back(anRatio);
+				else { 
+					mAnalysisDatas[j].push_back(anRatio);
+					mAvgDatas[j][k] += rmsPre * anRatio;
+				}
 			}
 			if (mIsSoften){
 				gaussian(mSoftenTmp, mFreqDomainSize, mSoftenKernelSize, mSoftenSigma);
 				for (int k = 0; k < mFreqDomainSize; k++) {
-					mAnalysisDatas[j].push_back(exp2f(mSoftenTmp[k]));
+					auto softened = exp2f(mSoftenTmp[k]);
+					mAnalysisDatas[j].push_back(softened);
+					mAvgDatas[j][k] += rmsPre * softened;
 				}
 			}
 		}
 		mAnalysisCnt++;
+	}
+	for (int i = 0; i < 2; i++) {
+		if (mAvgWt[i] > 0) {
+			for (int j = 0; j < mFreqDomainSize; j++) {
+				mAvgDatas[i][j] /= mAvgWt[i];
+			}
+		}
 	}
 
 	delete[]arrTimePre, arrTimePost, arrFreqPre, arrFreqPost, mSoftenTmp;
@@ -134,15 +163,25 @@ int MaxxCore::processTracks(juce::Array<juce::File> files, juce::File destInfo)
 {
 	if (files.isEmpty()) return 9; // no file selected
 	for (auto i = files.begin(); i < files.end(); i++) {
-		auto trackResult = processTrackCore(*i, destInfo);
+		auto trackResult = processTrackCore(*i, destInfo, false);
+		if (trackResult) return trackResult;
+	}
+	return 0;
+}
+int MaxxCore::processShots(juce::Array<juce::File> files, juce::File destInfo)
+{
+	if (files.isEmpty()) return 9; // no file selected
+	for (auto i = files.begin(); i < files.end(); i++) {
+		auto trackResult = processTrackCore(*i, destInfo, true);
 		if (trackResult) return trackResult;
 	}
 	return 0;
 }
 
-int MaxxCore::processTrackCore(juce::File track, juce::File destInfo)
+int MaxxCore::processTrackCore(juce::File track, juce::File destInfo, bool useAvg = false)
 {
-	auto trackName = juce::String("Dagoujiao_") + track.getFileName();
+	auto trackName = (useAvg ? juce::String("Daishuji_"):juce::String("Dagoujiao_")) 
+		+ track.getFileName();
 	auto reader = mFormatManager.createReaderFor(track);
 	if (!reader)
 		return 1; // fail to open
@@ -185,12 +224,13 @@ int MaxxCore::processTrackCore(juce::File track, juce::File destInfo)
 	int64_t mAnIndex = 0;
 
 	auto anFullCnt = mAnalysisCnt * mFreqDomainSize;
-
-	for (int64_t i = 0; i < mNumSamples; i += mFftDelta) {
-		bool isFinal = i + mFftDelta >= mNumSamples;
-		auto cnt = isFinal ? mNumSamples - i: mFftSize;
-		auto writeCnt = cnt - mFftCross;
-
+	int64_t targetSamples = useAvg ? len : mNumSamples;
+	for (int64_t i = 0; i < targetSamples; i += mFftDelta) {
+		bool isFirst = i == 0;
+		bool isFinal = i + mFftDelta >= targetSamples;
+		auto cnt = isFinal ? targetSamples - i: mFftSize;
+		auto writeCnt = isFinal?cnt: (cnt - mFftCross);
+		if (isFinal) buf.clear(); // to prevent final buf non-zero
 		reader->read(&buf, 0,
 			(int)cnt, i, true, true);
 		bufDest.clear();
@@ -199,7 +239,7 @@ int MaxxCore::processTrackCore(juce::File track, juce::File destInfo)
 			//copy buf
 			memcpy(bufDest.getWritePointer(j), bufCross.getReadPointer(j), sizeof(float) * mFftCross);
 
-			fwHann(buf.getWritePointer(j), mFftSize);
+			fwHann(buf.getWritePointer(j), mFftSize, !isFirst, !isFinal);
 			kiss_fftr(mCfgFft, buf.getReadPointer(j), arrFreq);
 
 
@@ -207,11 +247,14 @@ int MaxxCore::processTrackCore(juce::File track, juce::File destInfo)
 			for (int k = 0; k < mFreqDomainSize; k++) {
 				if (mAnIndex + k>= anFullCnt) break;
 				
-				arrFreq[k] = resizeCpx(arrFreq[k], mAnalysisDatas[j][mAnIndex + k]);
+				arrFreq[k] = resizeCpx(arrFreq[k], 
+					useAvg ? mAvgDatas[j][k]:
+					mAnalysisDatas[j][mAnIndex + k]);
 				
 			}
 			kiss_fftri(mCfgIfft, arrFreq, buf.getWritePointer(j));
 
+			fwHann(buf.getWritePointer(j), mFftSize, !isFirst, !isFinal);
 			// addin the result
 
 			for (int k = 0; k < mFftSize; k++) {

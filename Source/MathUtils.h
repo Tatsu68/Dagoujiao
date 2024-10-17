@@ -1,13 +1,19 @@
-﻿
+
 #pragma once
 
 #include <cmath>
 #include <complex>
 #include <algorithm>
+#include <vector>
 #include "../kissfft/kiss_fftr.h"
 
 #define PI 3.14159265359
 #define TAU 6.28318530718
+
+inline const bool apprEq0(float x)
+{
+    return abs(x) < (1.0f/(2<<30));
+}
 
 inline const float smoothstep(const float a, const float b, const float x){
     const float t = std::clamp((x - a) / (b - a), 0.0f, 1.0f);
@@ -54,20 +60,20 @@ inline const kiss_fft_cpx rotate2D(kiss_fft_cpx cpx, kiss_fft_scalar rad) {
 }
 
 inline const kiss_fft_cpx remap(float x, kiss_fft_cpx a, kiss_fft_cpx b) {
-    kiss_fft_cpx result{ juce::jmap(x, a.r, b.r) ,  juce::jmap(x, a.i, b.i) };
+    kiss_fft_cpx result{ b.r*x + a.r*(1.0f-x), b.r * x + a.r * (1.0f - x) };
     return result;
 }
 
 inline const bool isAllZero(float* data, int count) {
     for (int i = 0; i < count; i++) {
-        if (!juce::approximatelyEqual(data[i], 0.f))
+        if (!apprEq0(data[i]))
             return false;
     }
     return true;
 }
 inline const bool isAllZero(kiss_fft_cpx* data, int count) {
     for (int i = 0; i < count; i++) {
-        if (!(juce::approximatelyEqual(data[i].r, 0.f) && juce::approximatelyEqual(data[i].i, 0.f)))
+        if (!(apprEq0(data[i].r) && apprEq0(data[i].i)))
             return false;
     }
     return true;
@@ -77,7 +83,7 @@ inline const kiss_fft_cpx resizeCpx(const kiss_fft_cpx& x, float m) {
     kiss_fft_cpx c = x;
     float mag = getComplexMag(c.r, c.i);
 
-    if (!juce::approximatelyEqual(mag, 0.0f)) {
+    if (!apprEq0(mag)) {
         c.r *= m;
         c.i *= m;
     }
