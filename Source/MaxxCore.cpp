@@ -159,28 +159,29 @@ int MaxxCore::analyzeCore(float** pre, float** post, int n)
 	return 0;
 }
 
-int MaxxCore::processTracks(juce::Array<juce::File> files, juce::File destInfo)
+int MaxxCore::processTracks(juce::Array<juce::File> files, juce::File destInfo, bool usePrefix)
 {
 	if (files.isEmpty()) return 9; // no file selected
 	for (auto i = files.begin(); i < files.end(); i++) {
-		auto trackResult = processTrackCore(*i, destInfo, false);
+		auto trackResult = processTrackCore(*i, destInfo, false, usePrefix);
 		if (trackResult) return trackResult;
 	}
 	return 0;
 }
-int MaxxCore::processShots(juce::Array<juce::File> files, juce::File destInfo)
+int MaxxCore::processShots(juce::Array<juce::File> files, juce::File destInfo, bool usePrefix)
 {
 	if (files.isEmpty()) return 9; // no file selected
 	for (auto i = files.begin(); i < files.end(); i++) {
-		auto trackResult = processTrackCore(*i, destInfo, true);
+		auto trackResult = processTrackCore(*i, destInfo, true, usePrefix);
 		if (trackResult) return trackResult;
 	}
 	return 0;
 }
 
-int MaxxCore::processTrackCore(juce::File track, juce::File destInfo, bool useAvg = false)
+int MaxxCore::processTrackCore(juce::File track, juce::File destInfo, bool useAvg = false, bool usePrefix = true)
 {
-	auto trackName = (useAvg ? juce::String("Daishuji_"):juce::String("Dagoujiao_")) 
+	auto trackName = 
+		(usePrefix? (useAvg ? juce::String("Daishuji_"):juce::String("Dagoujiao_")) :juce::String(""))
 		+ track.getFileName();
 	auto reader = mFormatManager.createReaderFor(track);
 	if (!reader)

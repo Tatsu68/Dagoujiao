@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <JuceHeader.h>
 #include "MaxxCore.h"
@@ -24,24 +24,24 @@ public:
 private:
 
     const juce::String kSuperDescriptText =
-        juce::String("Make your BMS as loud as a big barkin' dog!\n") +
-        juce::String("First, analyze the pre & post mastering audio file.\n") +
-        juce::String("Then select and process all your tracks.\n") +
-        juce::String("Make sure all these files have all the same sample rate and length.\n") +
-        juce::String("Keep the Soften option on and tweak the kernel size & the sigma value to achieve a better result.\n") +
-        juce::String("\n") +
+        juce::String(u8"Make your BMS as loud as a big barkin' dog!\n") +
+        juce::String(u8"First, analyze the pre & post mastering audio file.\n") +
+        juce::String(u8"Then select and process all your tracks.\n") +
+        juce::String(u8"Make sure all these files have all the same sample rate and length.\n") +
+        juce::String(u8"Keep the Soften option on and tweak the kernel size & the sigma value to achieve a better result.\n") +
+        juce::String(u8"\n") +
         juce::String(u8"あなたのBMSを、デカ犬吠えるように！\n") +
         juce::String(u8"まずマスタリング前とマスタリング済データを分析しよう。\n") +
         juce::String(u8"その後、トラックを選択して処理しよう。\n") +
         juce::String(u8"すべでの音声データのサンプリングレートと標本数を一致してください。\n") +
         juce::String(u8"最優結果のため、Softenをオンにして、カーネルサイズやシグマ値を調整したほうがいい。\n") +
-        juce::String("\n") +
+        juce::String(u8"\n") +
         juce::String(u8"让您的BMS像大狗叫一样响亮！\n") +
         juce::String(u8"首先分析母带前后的音频文件。\n") +
         juce::String(u8"然后选择分轨并进行处理。\n") +
         juce::String(u8"请保证所有的音频数据采样率和长度一致。\n") +
         juce::String(u8"为了达到最佳效果，请保持Soften开启、适当调整Kernel大小和sigma值。\n") +
-        juce::String("\nby Kolaa");
+        juce::String(u8"\nby Kolaa");
     //==============================================================================
     // Your private member variables go here...
     std::unique_ptr<MaxxCore> mMaxx;
@@ -68,7 +68,6 @@ private:
     juce::FileChooser mChooserTrack = juce::FileChooser(
         "Add Track(s)",
         juce::File(),
-        "*.wav",
         true,
         true
 
@@ -92,6 +91,7 @@ private:
     juce::TextEditor mAnalysisIndicator;
     
     juce::ToggleButton mTglSoften {"Soften"};
+    juce::ToggleButton mTglPrefix{ "Prefix" };
     juce::Slider mSldKernel;
     juce::Slider mSldSigma;
     juce::ComboBox mComboFftOrder;

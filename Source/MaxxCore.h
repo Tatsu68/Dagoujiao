@@ -39,13 +39,13 @@ public:
     int setSoften(bool, int, float);
     int analyze(juce::File, juce::File);
     StatusInfo getStatus();
-    int processTracks(juce::Array<juce::File>, juce::File);
-    int processShots(juce::Array<juce::File>, juce::File);
+    int processTracks(juce::Array<juce::File>, juce::File, bool = true);
+    int processShots(juce::Array<juce::File>, juce::File, bool = true);
 private:
     juce::AudioFormatManager mFormatManager;
     juce::AudioBuffer<float> cool;
 
     int analyzeCore(float** pre, float** post, int n);
-    int processTrackCore(juce::File, juce::File, bool);
+    int processTrackCore(juce::File, juce::File, bool, bool);
 
 };

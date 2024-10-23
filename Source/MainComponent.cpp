@@ -4,11 +4,12 @@
 MainComponent::MainComponent()
 {
     mMaxx = std::make_unique<MaxxCore>();
-
     
     setSize (600, 640);
-
-
+    const auto fontName = "NotoSansJPVariableFont_wght_ttf";
+    int fontDataSize;
+    auto fontData = BinaryData::getNamedResource(fontName, fontDataSize);
+    juce::Font textFont(14.0f);
     mBtnLoadPre.setBounds(20, 20, 100, 30);
     mBtnLoadPre.addListener(this);
     addAndMakeVisible(mBtnLoadPre);
@@ -38,6 +39,11 @@ MainComponent::MainComponent()
     mTglSoften.setToggleState(true, false);
     addAndMakeVisible(mTglSoften);
 
+    mTglPrefix.setBounds(20, 160, 100, 30);
+    mTglPrefix.addListener(this);
+    mTglPrefix.setToggleState(true, false);
+    addAndMakeVisible(mTglPrefix);
+
     mSldKernel.setBounds(140, 120, 200, 90);
     mSldKernel.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
     mSldKernel.setTextBoxStyle(juce::Slider::TextBoxRight, false,60,20);
@@ -53,14 +59,12 @@ MainComponent::MainComponent()
     mSldSigma.setRange(0.1, 8.0, 0.1);
     mSldSigma.setValue(2.0, juce::dontSendNotification);
     addAndMakeVisible(mSldSigma);
-
-
     mAnalysisIndicator.setBounds(20, 220, 560, 400);
     mAnalysisIndicator.setReadOnly(true);
     mAnalysisIndicator.setMultiLine(true);
-    mAnalysisIndicator.setText(kSuperDescriptText, false);
+    mAnalysisIndicator.setFont(textFont);
+    updateAnalysisStatus(); //mAnalysisIndicator.setText(kSuperDescriptText, false);
     addAndMakeVisible(mAnalysisIndicator);
-
 
 }
 
@@ -113,14 +117,11 @@ void MainComponent::buttonClicked(juce::Button *btn) {
     }
     if (btn == &mBtnProcess) {
         mChooserSave.browseForDirectory();
-        mProcStat = mMaxx->processTracks(mChooserTrack.getResults(), mChooserSave.getResult());
+        mProcStat = mMaxx->processTracks(mChooserTrack.getResults(), mChooserSave.getResult(), mTglPrefix.getToggleState());
     }
     if (btn == &mBtnProcessShot) {
         mChooserSave.browseForDirectory();
-        mProcStat = mMaxx->processShots(mChooserTrack.getResults(), mChooserSave.getResult());
-    }
-    if (btn == &mTglSoften) {
-
+        mProcStat = mMaxx->processShots(mChooserTrack.getResults(), mChooserSave.getResult(), mTglPrefix.getToggleState());
     }
 
     updateAnalysisStatus();
@@ -160,6 +161,8 @@ void MainComponent::updateAnalysisStatus()
         text += juce::String(mProcStat);
         break;
     }
-    mAnalysisIndicator.setText(text);
+    text += "\n\n";
+    text += kSuperDescriptText;
+    mAnalysisIndicator.setText(text, false);
     
 }
