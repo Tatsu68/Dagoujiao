@@ -68,7 +68,6 @@ private:
     juce::FileChooser mChooserTrack = juce::FileChooser(
         "Add Track(s)",
         juce::File(),
-        "*.wav",
         true,
         true
 
