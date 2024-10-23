@@ -183,6 +183,7 @@ int MaxxCore::processTrackCore(juce::File track, juce::File destInfo, bool useAv
 	auto trackName = 
 		(usePrefix? (useAvg ? juce::String("Daishuji_"):juce::String("Dagoujiao_")) :juce::String(""))
 		+ track.getFileName();
+	bool isOgg = track.getFileName().toLowerCase().endsWith(".ogg");
 	auto reader = mFormatManager.createReaderFor(track);
 	if (!reader)
 		return 1; // fail to open
@@ -192,6 +193,7 @@ int MaxxCore::processTrackCore(juce::File track, juce::File destInfo, bool useAv
 	if (sr != mSampleRate)
 		return 10; // sample rates are different
 	juce::WavAudioFormat wavFormat;
+	juce::OggVorbisAudioFormat oggFormat;
 	auto destFile = destInfo.getChildFile(trackName);
 	if (destFile.exists()) {
 		if (!destFile.deleteFile()) return 21; // fail to delete track;
@@ -199,13 +201,26 @@ int MaxxCore::processTrackCore(juce::File track, juce::File destInfo, bool useAv
 	auto os = destFile.createOutputStream();
 	if (!os)
 		return 11; //can't create output
-	auto writer = wavFormat.createWriterFor(
-		os.get(),
-		sr,
-		2,
-		reader->bitsPerSample,
-		juce::StringPairArray(),
-		0);
+	int qualId = 0;
+	if (isOgg) {
+		qualId = oggFormat.getQualityOptions().indexOf("256 kbps");//oggFormat.estimateOggFileQuality(track);
+	}
+	juce::AudioFormatWriter* writer =
+		isOgg?
+		oggFormat.createWriterFor(
+			os.get(),
+			sr,
+			2,
+			reader->bitsPerSample,
+			juce::StringPairArray(),
+			qualId):
+		wavFormat.createWriterFor(
+			os.get(),
+			sr,
+			2,
+			reader->bitsPerSample,
+			juce::StringPairArray(),
+			qualId);
 	if (!writer)
 		return 12; // can't create writer
 
@@ -272,9 +287,9 @@ int MaxxCore::processTrackCore(juce::File track, juce::File destInfo, bool useAv
 
 	}
 	writer->flush();
-	os.reset();
+	delete writer;
+	os.release();
 	delete[] arrTime, arrFreq;
-
 	return 0;
 }
 

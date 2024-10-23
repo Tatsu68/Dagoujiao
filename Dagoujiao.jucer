@@ -2,8 +2,8 @@
 
 <JUCERPROJECT id="rGFz3X" name="Dagoujiao" projectType="guiapp" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" cppLanguageStandard="20"
-              bundleIdentifier="com.kolaa.dagoujiao" defines="JUCE_MODAL_LOOPS_PERMITTED=1"
-              version="0.2.1">
+              bundleIdentifier="com.kolaa.dagoujiao" defines="JUCE_MODAL_LOOPS_PERMITTED=1&#10;JUCE_USE_OGGVORBIS=1"
+              version="0.3.0">
   <MAINGROUP id="CD0oMX" name="Dagoujiao">
     <GROUP id="{87F882B2-E0C0-A9CA-D48B-44DF9DF078C9}" name="Source">
       <FILE id="ZnHh0l" name="FftWindow.h" compile="0" resource="0" file="Source/FftWindow.h"/>
