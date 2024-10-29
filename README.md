@@ -21,7 +21,9 @@ In the BOF:NT of 2023, the bms of my work '〇、' was commented that the keysou
 4. ogg is supported. The output would be 256kbps by now.
     本ツールではoggが支援されています。現在、出力データの品質は256kbpsになります。
     本工具支持ogg。目前输出的码率是256kbps。
-
+5. I've only build windows version.　You can compile mac version yourself if needed. Feel free to report any bugs by opening an issue!
+    Windowsバージョンのみビルドしました。必要な場合はご自身でMacバージョンをビルドしてください。バグ報告はイシューでお気軽にどうぞ！
+    目前只编译了Windows版本，Mac版本可以根据需要自行编译。欢迎通过Issue报告Bug！
 # License
 This tool is licensed under [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.en.html).
 ## JUCE
